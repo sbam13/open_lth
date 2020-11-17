@@ -109,9 +109,16 @@ class DatasetHparams(Hparams):
     do_not_augment: bool = False
     transformation_seed: int = None
     subsample_fraction: float = None
+
     random_labels_fraction: float = None
+    corruption_probability: float = None
+    label_randomization_type: str = None
+    label_randomization_targets: str = None
+
     unsupervised_labels: str = None
     blur_factor: int = None
+
+    eval_on_train: bool = False
 
     _name: str = 'Dataset Hyperparameters'
     _description: str = 'Hyperparameters that select the dataset, data augmentation, and other data transformations.'
@@ -122,9 +129,13 @@ class DatasetHparams(Hparams):
                                 'random labels, subsampling, and unsupervised labels.'
     _subsample_fraction: str = 'Subsample the training set, retaining the specified fraction: float in (0, 1]'
     _random_labels_fraction: str = 'Apply random labels to a fraction of the training set: float in (0, 1]'
+    _corruption_probability: str = "When `label_randomization_type` is 'corrupt', corrupt individual labels with this probability: float in [0, 1]"
+    _label_randomization_type: str = "The type of randomization to apply on the labels: one of 'fraction', 'corrupt', or 'shuffle'"
+    _label_randomization_targets: str = "Which labels to apply randomization to: comma-separated one or more of 'train' and 'test'"
     _unsupervised_labels: str = 'Replace the standard labels with alternative, unsupervised labels. Example: rotation'
     _blur_factor: str = 'Blur the training set by downsampling and then upsampling by this multiple.'
 
+    _eval_on_train: str = 'Show evaluation statistics for training data after every epoch. : bool'
 
 @dataclass
 class ModelHparams(Hparams):

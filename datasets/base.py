@@ -64,6 +64,28 @@ class Dataset(abc.ABC, torch.utils.data.Dataset):
         randomized_labels = np.random.RandomState(seed=seed).randint(self.num_classes(), size=num_to_randomize)
         examples_to_randomize = np.random.RandomState(seed=seed+1).permutation(len(self._labels))[:num_to_randomize]
         self._labels[examples_to_randomize] = randomized_labels
+    
+    def corrupt_labels(self, seed: int, corrupt_prob: float):
+        """
+        param seed: a RNG seed.
+        param corrupt_prob: With probability `corrupt_prob`, a label is replaced
+            with a random class label.
+        """
+        num_classes = self.num_classes()
+        num_labels = self._labels.shape[0]
+
+        torch.manual_seed(seed)
+
+        mask = torch.empty(num_labels).fill_(corrupt_prob)
+        mask = torch.bernoulli(mask).bool()
+
+        n_mask = torch.sum(mask)
+        self._labels[mask] = torch.randint(num_classes, (n_mask,))
+
+    def shuffle_labels(self, seed: int):
+        """Shuffles the labels."""
+        self._labels = np.random.RandomState(seed).permutation(self._labels)
+
 
     def subsample(self, seed: int, fraction: float) -> None:
         """Subsample the dataset."""

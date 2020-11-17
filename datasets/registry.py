@@ -19,8 +19,8 @@ def get(dataset_hparams: DatasetHparams, train: bool = True):
 
     # Get the dataset itself.
     if dataset_hparams.dataset_name in registered_datasets:
-        use_augmentation = train and not dataset_hparams.do_not_augment
         if train:
+            use_augmentation = not dataset_hparams.do_not_augment
             dataset = registered_datasets[dataset_hparams.dataset_name].Dataset.get_train_set(use_augmentation)
         else:
             dataset = registered_datasets[dataset_hparams.dataset_name].Dataset.get_test_set()
@@ -28,8 +28,25 @@ def get(dataset_hparams: DatasetHparams, train: bool = True):
         raise ValueError('No such dataset: {}'.format(dataset_hparams.dataset_name))
 
     # Transform the dataset.
-    if train and dataset_hparams.random_labels_fraction is not None:
-        dataset.randomize_labels(seed=seed, fraction=dataset_hparams.random_labels_fraction)
+    randomize = False
+    if dataset_hparams.label_randomization_targets is not None:
+        rand_targets = dataset_hparams.label_randomization_targets.split(',')
+        rand_targets = [elem.strip() for elem in rand_targets]
+        if train:
+            randomize = 'train' in rand_targets
+        else:
+            randomize = 'test' in rand_targets
+    
+    if randomize and dataset_hparams.label_randomization_type is not None:
+        _type = dataset_hparams.label_randomization_type
+        if _type == 'shuffle':
+            dataset.shuffle_labels(seed=seed)
+        elif _type == 'corrupt':
+            dataset.corrupt_labels(seed=seed, corrupt_prob=dataset_hparams.corruption_probability)
+        elif _type == 'fraction':
+            dataset.randomize_labels(seed=seed, fraction=dataset_hparams.random_labels_fraction)
+        else:
+            raise ValueError(f"'{dataset_hparams.label_randomization_type}' is not a valid randomization type.")
 
     if train and dataset_hparams.subsample_fraction is not None:
         dataset.subsample(seed=seed, fraction=dataset_hparams.subsample_fraction)
